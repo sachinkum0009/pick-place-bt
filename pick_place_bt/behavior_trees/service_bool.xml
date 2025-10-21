@@ -1,0 +1,10 @@
+<root BTCPP_format="4">
+    <BehaviorTree>
+        <Sequence>
+            <SetBoolA value="true"/>
+            <SetBool  service_name="robotB/set_bool" value="true"/>
+            <SetRobotBool robot="robotA" value="true"/>
+            <SetRobotBool robot="robotB" value="true"/>
+        </Sequence>
+    </BehaviorTree>
+</root>
