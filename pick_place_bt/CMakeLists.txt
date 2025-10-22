@@ -42,11 +42,15 @@ ament_target_dependencies(bt_executor_node ${REQUIRED_PACKAGES})
 add_executable(gripper_bt_node src/gripper_bt_node.cpp)
 ament_target_dependencies(gripper_bt_node ${REQUIRED_PACKAGES})
 
+add_executable(move_group_server_node src/move_group_server.cpp)
+ament_target_dependencies(move_group_server_node ${REQUIRED_PACKAGES})
+
 install(TARGETS
-  pick_place_bt_node
-  pick_place_bt_server_node
   bt_executor_node
   gripper_bt_node
+  move_group_server_node
+  pick_place_bt_node
+  pick_place_bt_server_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

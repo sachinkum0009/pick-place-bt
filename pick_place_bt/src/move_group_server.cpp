@@ -1,6 +1,5 @@
 #include "pick_place_bt/move_group_server.hpp"
 
-
 namespace move_group_server
 {
     MoveGroupService::MoveGroupService(std::shared_ptr<rclcpp::Node> node)
@@ -17,10 +16,29 @@ namespace move_group_server
     }
 
     void MoveGroupService::handle_move_to(const std::shared_ptr<pick_place_interface::srv::MoveTo::Request> request,
-                                         std::shared_ptr<pick_place_interface::srv::MoveTo::Response> response)
+                                          std::shared_ptr<pick_place_interface::srv::MoveTo::Response> response)
     {
-        RCLCPP_INFO(node_->get_logger(), "Received move_to request to position: x=%f, y=%f, z=%f",
-                    request->position.x, request->position.y, request->position.z);
+
+        geometry_msgs::msg::PoseStamped target_pose;
+        target_pose.pose = request->target_pose;
+        move_group_->setPoseTarget(target_pose);
+
+        bool success = (move_group_->move() == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+
+        if (success)
+        {
+            response->success = true;
+            response->message = "Robot moved to target pose successfully.";
+            RCLCPP_INFO(node_->get_logger(), "Robot moved to the target pose successfully.");
+        }
+        else
+        {
+            response->success = false;
+            response->message = "Failed to move robot to target pose.";
+            RCLCPP_ERROR(node_->get_logger(), "Failed to move the robot to the target pose.");
+        }
+        // RCLCPP_INFO(node_->get_logger(), "Received move_to request to position: x=%f, y=%f, z=%f",
+        // request->position.x, request->position.y, request->position.z);
 
         // Here you would add the logic to move the robot using MoveIt!
         // For now, we just simulate a successful move.
@@ -28,27 +46,7 @@ namespace move_group_server
         RCLCPP_INFO(node_->get_logger(), "MoveTo request handled successfully.");
     }
 
-    void MoveGroupService::execute()
-    {
-        RCLCPP_INFO(node_->get_logger(), "Executing MoveGroupService...");
-
-        // Example: Move to a predefined pose
-        // moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-        // bool success = (move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-
-        // if (success)
-        // {
-        //     RCLCPP_INFO(node_->get_logger(), "Planning successful, executing...");
-        //     move_group_.execute(my_plan);
-        //     RCLCPP_INFO(node_->get_logger(), "Movement executed.");
-        // }
-        // else
-        // {
-        //     RCLCPP_ERROR(node_->get_logger(), "Planning failed.");
-        // }
-    }
 } // namespace move_group_server
-
 
 int main(int argc, char **argv)
 {
@@ -58,9 +56,8 @@ int main(int argc, char **argv)
     // Create a ROS logger
     auto const logger = rclcpp::get_logger("move_group_server_node");
 
-
-    // auto move_group_service = std::make_shared<move_group_server::MoveGroupService>();
-    // move_group_service->execute();
+    auto move_group_service = std::make_shared<move_group_server::MoveGroupService>(node);
+    rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;
 }

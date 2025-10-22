@@ -6,6 +6,7 @@
 #include <moveit/move_group_interface/move_group_interface.h>
 
 #include <pick_place_interface/srv/move_to.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
 
 namespace move_group_server
 {
@@ -14,7 +15,6 @@ namespace move_group_server
     public:
         MoveGroupService(std::shared_ptr<rclcpp::Node> node);
         ~MoveGroupService();
-        void execute();
         void handle_move_to(const std::shared_ptr<pick_place_interface::srv::MoveTo::Request> request,
                             std::shared_ptr<pick_place_interface::srv::MoveTo::Response> response);
     private:
