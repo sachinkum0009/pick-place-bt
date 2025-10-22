@@ -5,7 +5,7 @@ namespace move_group_server
     MoveGroupService::MoveGroupService(std::shared_ptr<rclcpp::Node> node)
         : node_(node)
     {
-        move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(node_, "manipulator");
+        move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(node_, "arm");
         service_ = node_->create_service<pick_place_interface::srv::MoveTo>("move_to", std::bind(&MoveGroupService::handle_move_to, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(node_->get_logger(), "MoveGroupService initialized.");
     }
