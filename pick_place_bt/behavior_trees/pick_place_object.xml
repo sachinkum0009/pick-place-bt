@@ -1,0 +1,35 @@
+<root BTCPP_format="4">
+    <BehaviorTree>
+        <!-- High-level loop: keep trying to pick objects until camera reports no objects -->
+        <RepeatUntilFailure>
+            <Sequence>
+                <!-- Move to a safe top position before scanning -->
+                <MoveToTop position="top"/>
+
+                <!-- Detect an object using camera; succeeds if an object is found and sets a blackboard key 'detected_object' -->
+                <DetectObjectCamera output_key="detected_object"/>
+
+                <!-- If detection failed this Sequence will fail and RepeatUntilFailure will stop the loop -->
+                <Sequence>
+                    <!-- Reach to the detected object's pose (reads 'detected_object' from blackboard) -->
+                    <ReachObject object_key="detected_object"/>
+
+                    <!-- Close gripper to grasp -->
+                    <CloseGripper/>
+
+                    <!-- Confirm the object is attached; if not, try again by failing this inner sequence -->
+                    <ConfirmAttached/>
+
+                    <!-- Place the object at a predefined place location. Optionally the place location can depend on object or round-robin. -->
+                    <PlaceObject place_location="place_point"/>
+
+                    <!-- Open gripper to release -->
+                    <OpenGripper/>
+
+                    <!-- Optional small retreat to top before next iteration -->
+                    <MoveToTop position="top"/>
+                </Sequence>
+            </Sequence>
+        </RepeatUntilFailure>
+    </BehaviorTree>
+</root>

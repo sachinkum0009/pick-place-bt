@@ -3,7 +3,6 @@ project(pick_place_bt)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -17,21 +16,37 @@ find_package(btcpp_ros2_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(bcap_service_interfaces REQUIRED)
+
+set (REQUIRED_PACKAGES
+  behaviortree_ros2
+  btcpp_ros2_interfaces
+  rclcpp
+  std_msgs
+  std_srvs
+  bcap_service_interfaces
+)
 
 # add include directory for headers
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_executable(pick_place_bt_node src/set_bool_node.cpp src/pick_place_bt.cpp)
-ament_target_dependencies(pick_place_bt_node rclcpp std_msgs std_srvs behaviortree_ros2 btcpp_ros2_interfaces)
-install(TARGETS
-  pick_place_bt_node
-  DESTINATION lib/${PROJECT_NAME}
-)
+ament_target_dependencies(pick_place_bt_node ${REQUIRED_PACKAGES})
 
 add_executable(pick_place_bt_server_node src/pick_place_bt_server.cpp)
-ament_target_dependencies(pick_place_bt_server_node rclcpp std_msgs std_srvs)
+ament_target_dependencies(pick_place_bt_server_node ${REQUIRED_PACKAGES})
+
+add_executable(bt_executor_node src/bt_executor.cpp)
+ament_target_dependencies(bt_executor_node ${REQUIRED_PACKAGES})
+
+add_executable(gripper_bt_node src/gripper_bt_node.cpp)
+ament_target_dependencies(gripper_bt_node ${REQUIRED_PACKAGES})
+
 install(TARGETS
+  pick_place_bt_node
   pick_place_bt_server_node
+  bt_executor_node
+  gripper_bt_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
