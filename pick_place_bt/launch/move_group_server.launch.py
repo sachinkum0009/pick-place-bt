@@ -50,8 +50,9 @@ def generate_launch_description():
         executable='move_group_server_node',
         name='move_group_server_node',
         output='screen',
-        namespace="cobotta",
-        parameters=[robot_description, robot_description_semantic]
+        # namespace="cobotta",
+        # parameters=[robot_description, robot_description_semantic, {'use_sim_time': False}]
+        parameters=[robot_description_semantic, {'use_sim_time': False}]
     )
 
     return LaunchDescription(declared_arguments + [node])
