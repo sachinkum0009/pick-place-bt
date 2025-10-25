@@ -66,7 +66,12 @@ install(DIRECTORY behavior_trees launch
 )
 
 # install python module
-ament_python_install_package(${PROJECT_NAME} PACKAGE_DIR ${PROJECT_NAME})
+ament_python_install_package(${PROJECT_NAME})
+
+install(PROGRAMS
+  scripts/ar_det_server_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

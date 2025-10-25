@@ -9,8 +9,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-from rclpy.executors import MultiThreadedExecutor
-from rclpy.callback_groups import ReentrantCallbackGroup, MutuallyExclusiveCallbackGroup
+from rclpy.callback_groups import ReentrantCallbackGroup
 
 import cv2
 
@@ -28,8 +27,8 @@ class ARDetServer(Node):
             callback_group=self.callback_group,
         )
         self.bridge = CvBridge()
-        self.aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)
-        self.aruco_params = cv2.aruco.DetectorParameters_create()
+        self.aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250)
+        self.aruco_params = cv2.aruco.DetectorParameters()
         self.detector = cv2.aruco.ArucoDetector(self.aruco_dict, self.aruco_params)
 
     def image_callback(self, msg: Image):
@@ -44,20 +43,3 @@ class ARDetServer(Node):
         else:
             self.get_logger().info("No AR tags detected.")
         self.get_logger().info("Received an image for AR tag detection.")
-
-
-def main(args=None):
-    rclpy.init(args=args)
-    ar_det_server = ARDetServer()
-    executor = MultiThreadedExecutor()
-    executor.add_node(ar_det_server)
-    try:
-        executor.spin()
-    finally:
-        executor.shutdown()
-        ar_det_server.destroy_node()
-    rclpy.shutdown()
-
-
-if __name__ == "__main__":
-    main()

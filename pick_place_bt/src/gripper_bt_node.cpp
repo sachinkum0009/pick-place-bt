@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     move_to_params.server_timeout = std::chrono::milliseconds(50000);  // 50 seconds for service call
 
     // Register our custom move_to node
-    factory.registerNodeType<MoveGroupService>("MoveTo", move_to_params);
+    factory.registerNodeType<MoveToService>("MoveTo", move_to_params);
     
     // Load XML from package share and create tree from file
     std::string pkg_share;
