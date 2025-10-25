@@ -17,6 +17,9 @@ namespace move_group_server
         ~MoveGroupService();
         void handle_move_to(const std::shared_ptr<pick_place_interface::srv::MoveTo::Request> request,
                             std::shared_ptr<pick_place_interface::srv::MoveTo::Response> response);
+        geometry_msgs::msg::PoseStamped get_current_pose();
+        std::vector<double> get_current_joint_values();
+        bool wait_for_current_state(double timeout_seconds);
     private:
         std::shared_ptr<rclcpp::Node> node_;
         std::shared_ptr<moveit::planning_interface::MoveGroupInterface> move_group_;

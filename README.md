@@ -8,4 +8,6 @@ Using behaviortree cpp to pick and place object
 ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zedm
 
 ros2 run pick_place_bt gripper_bt_node
+
+ros2 launch pick_place_bt move_group_server.launch.py
 ```
