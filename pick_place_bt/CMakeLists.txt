@@ -14,6 +14,7 @@ find_package(ament_index_cpp REQUIRED)
 find_package(behaviortree_ros2 REQUIRED)
 find_package(btcpp_ros2_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(bcap_service_interfaces REQUIRED)
@@ -63,6 +64,9 @@ install(TARGETS
 install(DIRECTORY behavior_trees launch
   DESTINATION share/${PROJECT_NAME}
 )
+
+# install python module
+ament_python_install_package(${PROJECT_NAME} PACKAGE_DIR ${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
