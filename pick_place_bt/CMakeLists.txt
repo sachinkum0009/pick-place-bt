@@ -14,9 +14,13 @@ find_package(ament_index_cpp REQUIRED)
 find_package(behaviortree_ros2 REQUIRED)
 find_package(btcpp_ros2_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(bcap_service_interfaces REQUIRED)
+find_package(moveit_ros_planning REQUIRED)
+find_package(moveit_ros_planning_interface REQUIRED)
+find_package(pick_place_interface REQUIRED)
 
 set (REQUIRED_PACKAGES
   behaviortree_ros2
@@ -25,6 +29,9 @@ set (REQUIRED_PACKAGES
   std_msgs
   std_srvs
   bcap_service_interfaces
+  moveit_ros_planning
+  moveit_ros_planning_interface
+  pick_place_interface
 )
 
 # add include directory for headers
@@ -56,6 +63,14 @@ install(TARGETS
 
 install(DIRECTORY behavior_trees launch
   DESTINATION share/${PROJECT_NAME}
+)
+
+# install python module
+ament_python_install_package(${PROJECT_NAME})
+
+install(PROGRAMS
+  scripts/ar_det_server_node.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

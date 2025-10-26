@@ -4,6 +4,7 @@
 #include <behaviortree_ros2/bt_service_node.hpp>
 #include "open_close_gripper.cpp"
 #include "delay_node.cpp"
+#include "move_to.cpp"
 
 int main(int argc, char** argv) {
     rclcpp::init(argc, argv);
@@ -24,6 +25,15 @@ int main(int argc, char** argv) {
     
     // Register our custom wait/delay node
     factory.registerNodeType<BT::WaitNode>("Wait");
+
+    BT::RosNodeParams move_to_params;
+    move_to_params.nh = nh;
+    move_to_params.default_port_value = "/move_to";
+    move_to_params.wait_for_server_timeout = std::chrono::milliseconds(5000);  // 5 seconds to wait for service as the robot is moving very slowly
+    move_to_params.server_timeout = std::chrono::milliseconds(50000);  // 50 seconds for service call
+
+    // Register our custom move_to node
+    factory.registerNodeType<MoveToService>("MoveTo", move_to_params);
     
     // Load XML from package share and create tree from file
     std::string pkg_share;
@@ -46,8 +56,8 @@ int main(int argc, char** argv) {
     }
     
     // Give some time for service connections to establish
-    RCLCPP_INFO(nh->get_logger(), "Waiting for services to be available...");
     rclcpp::sleep_for(std::chrono::seconds(1));
+
     
     // Execute the behavior tree
     tree.tickWhileRunning();
