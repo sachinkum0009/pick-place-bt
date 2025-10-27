@@ -22,7 +22,8 @@ namespace tag_pose_server
         RCLCPP_INFO(node_->get_logger(), "Received tag_pose request for ID: %d", request->id);
         try
         {
-            auto t = tf_buffer_->lookupTransform("tag"+std::to_string(request->id), "J6", tf2::TimePointZero);
+            auto t = tf_buffer_->lookupTransform("tag"+std::to_string(request->id), "J6", tf2::TimePointZero, tf2::durationFromSec(1.0));
+            response->success = true;
             response->pose.position.x = t.transform.translation.x;
             response->pose.position.y = t.transform.translation.y;
             response->pose.position.z = t.transform.translation.z;

@@ -1,0 +1,15 @@
+<root BTCPP_format="4">
+  <BehaviorTree ID="GripperControl">
+    <Repeat num_cycles="10">
+      <Fallback>
+        <Sequence>
+          <TagPose id="0" success="{tag1_success}" x="{tag1_x}" y="{tag1_y}" z="{tag1_z}"/>
+          <Precondition if="tag1_success">
+            <MoveTo x="{tag1_x}" y="{tag1_y}" z="{tag1_z}" wx="-0.0503060" wy="0.998189" wz="-0.005559" w="-0.032425"/>
+          </Precondition>
+        </Sequence>
+        <MoveTo x="0.25" y="-0.11" z="0.165" wx="-0.0503060" wy="0.998189" wz="-0.005559" w="-0.032425"/>
+      </Fallback>
+    </Repeat>
+  </BehaviorTree>
+</root>

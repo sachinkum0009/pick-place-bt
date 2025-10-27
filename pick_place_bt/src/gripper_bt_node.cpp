@@ -2,9 +2,11 @@
 #include <rclcpp/rclcpp.hpp>
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <behaviortree_ros2/bt_service_node.hpp>
+#include <behaviortree_cpp/loggers/groot2_publisher.h>
 #include "open_close_gripper.cpp"
 #include "delay_node.cpp"
 #include "move_to.cpp"
+#include "tag_pose.cpp"
 
 int main(int argc, char** argv) {
     rclcpp::init(argc, argv);
@@ -34,6 +36,15 @@ int main(int argc, char** argv) {
 
     // Register our custom move_to node
     factory.registerNodeType<MoveToService>("MoveTo", move_to_params);
+
+    BT::RosNodeParams tag_pose_params;
+    tag_pose_params.nh = nh;
+    tag_pose_params.default_port_value = "/tag_pose";
+    tag_pose_params.wait_for_server_timeout = std::chrono::milliseconds(5000);  // 5 seconds to wait for service
+    tag_pose_params.server_timeout = std::chrono::milliseconds(10000);  // 10 seconds for service call
+
+    // Register our custom tag_pose node
+    factory.registerNodeType<TagPoseService>("TagPose", tag_pose_params);
     
     // Load XML from package share and create tree from file
     std::string pkg_share;
@@ -44,7 +55,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     
-    std::string xml_path = pkg_share + "/behavior_trees/gripper_control.xml";
+    std::string xml_path = pkg_share + "/behavior_trees/tag_pose.xml";
     
     BT::Tree tree;
     try {
@@ -54,6 +65,8 @@ int main(int argc, char** argv) {
                      xml_path.c_str(), ex.what());
         return 1;
     }
+
+    BT::Groot2Publisher publisher(tree, 1666);
     
     // Give some time for service connections to establish
     rclcpp::sleep_for(std::chrono::seconds(1));
