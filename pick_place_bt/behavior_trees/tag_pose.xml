@@ -1,0 +1,21 @@
+<root BTCPP_format="4">
+  <BehaviorTree ID="GripperControl">
+      <Sequence>
+        <MoveToPose x="0.15" y="-0.047" z="0.295" wx="-0.0503060" wy="0.998189" wz="-0.005559" w="-0.032425"/>
+        <OpenCloseGripper command="open" speed="10"/>
+        <TagPose id="1" success="{tag1_success}" x="{tag1_x}" y="{tag1_y}" z="{tag1_z}"/>
+        <Script code="adjusted_x := tag1_x + 0.035"/>
+        <Script code="adjusted_y := tag1_y - 0.0"/>
+        <Script code="adjusted_z := -tag1_z + 0.045"/>
+        <Precondition if="tag1_success">
+          <MoveTo x="{adjusted_x}" y="{adjusted_y}" z="-0.235" wx="-0.0503060" wy="0.998189" wz="-0.005559" w="-0.032425"/>
+        </Precondition>
+        <OpenCloseGripper command="close" speed="10"/>
+        <MoveToPose x="0.15" y="-0.047" z="0.295" wx="-0.0503060" wy="0.998189" wz="-0.005559" w="-0.032425"/>
+        <MoveToPose x="0.25" y="0.11" z="0.165" wx="-0.0503060" wy="0.998189" wz="-0.005559" w="-0.032425"/>
+        <MoveToPose x="0.25" y="0.11" z="0.065" wx="-0.0503060" wy="0.998189" wz="-0.005559" w="-0.032425"/>
+        <OpenCloseGripper command="open" speed="10"/>
+        <MoveToPose x="0.15" y="-0.047" z="0.295" wx="-0.0503060" wy="0.998189" wz="-0.005559" w="-0.032425"/>
+      </Sequence>
+  </BehaviorTree>
+</root>

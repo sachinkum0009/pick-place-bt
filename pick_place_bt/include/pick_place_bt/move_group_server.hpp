@@ -7,6 +7,7 @@
 
 #include <pick_place_interface/srv/move_to.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
+#include <std_srvs/srv/trigger.hpp>
 
 namespace move_group_server
 {
@@ -20,9 +21,9 @@ namespace move_group_server
         geometry_msgs::msg::PoseStamped get_current_pose();
         std::vector<double> get_current_joint_values();
         bool wait_for_current_state(double timeout_seconds);
+        std::shared_ptr<moveit::planning_interface::MoveGroupInterface> move_group_;
     private:
         std::shared_ptr<rclcpp::Node> node_;
-        std::shared_ptr<moveit::planning_interface::MoveGroupInterface> move_group_;
         rclcpp::Service<pick_place_interface::srv::MoveTo>::SharedPtr service_;
     };
 } // namespace move_group_server
