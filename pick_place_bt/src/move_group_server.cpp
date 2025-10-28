@@ -16,7 +16,7 @@ namespace move_group_server
         RCLCPP_INFO(node->get_logger(), "Goal orientation tolerance is %f", goal_orientation_tolerance);
         RCLCPP_INFO(node_->get_logger(), "End effector is %s", end_effector.c_str());
         RCLCPP_INFO(node_->get_logger(), "Planning frame is %s", planning_frame.c_str());
-        service_ = node_->create_service<pick_place_interface::srv::MoveTo>("move_to", std::bind(&MoveGroupService::handle_move_to, this, std::placeholders::_1, std::placeholders::_2));
+        service_ = node_->create_service<pick_place_interface::srv::MoveTo>("move_to_pose", std::bind(&MoveGroupService::handle_move_to, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(node_->get_logger(), "MoveGroupService initialized.");
     }
 
@@ -28,12 +28,6 @@ namespace move_group_server
     void MoveGroupService::handle_move_to(const std::shared_ptr<pick_place_interface::srv::MoveTo::Request> request,
                                           std::shared_ptr<pick_place_interface::srv::MoveTo::Response> response)
     {
-
-        // geometry_msgs::msg::PoseStamped target_pose;
-        // target_pose.header.frame_id = move_group_->getPlanningFrame();
-        // target_pose.header.frame_id = "J6";
-        // target_pose.header.stamp = node_->now();
-        // target_pose.pose = request->target_pose;
         RCLCPP_INFO(node_->get_logger(), "Received move_to request to position: x=%f, y=%f, z=%f, wx=%f, wy=%f, wz=%f, w=%f",
                     request->target_pose.position.x,
                     request->target_pose.position.y,
@@ -44,11 +38,8 @@ namespace move_group_server
                     request->target_pose.orientation.w);
         move_group_->clearPoseTarget();
         move_group_->setPoseTarget(request->target_pose);
-        // move_group_->setPositionTarget(request->target_pose.position.x,
-        //                               request->target_pose.position.y,
-        //                               request->target_pose.position.z);
         moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-        bool success = (move_group_->plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+        bool success = (move_group_->plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
 
         if (success)
         {
@@ -64,20 +55,6 @@ namespace move_group_server
             response->message = "Failed to move robot to target pose.";
         }
 
-        // if (success)
-        // {
-        //     RCLCPP_INFO(node_->get_logger(), "Robot moved to the target pose successfully.");
-        // }
-        // else
-        // {
-        //     RCLCPP_ERROR(node_->get_logger(), "Failed to move the robot to the target pose.");
-        // }
-        // RCLCPP_INFO(node_->get_logger(), "Received move_to request to position: x=%f, y=%f, z=%f",
-        // request->position.x, request->position.y, request->position.z);
-
-        // Here you would add the logic to move the robot using MoveIt!
-        // For now, we just simulate a successful move.
-        response->success = true;
         RCLCPP_INFO(node_->get_logger(), "MoveTo request handled successfully.");
     }
 
@@ -90,6 +67,65 @@ namespace move_group_server
         return move_group_->getCurrentJointValues();
     }
 
+    class MyRosNode : public rclcpp::Node
+    {
+    public:
+        MyRosNode(std::shared_ptr<move_group_server::MoveGroupService> moveit_node) : Node("my_ros_node"), moveit_node_(moveit_node)
+        {
+            RCLCPP_INFO(this->get_logger(), "MyRosNode has been started.");
+
+            trigger_service_ = this->create_service<std_srvs::srv::Trigger>(
+                "trigger_service",
+                std::bind(&MyRosNode::trigger_callback, this, std::placeholders::_1, std::placeholders::_2));
+            service_ = this->create_service<pick_place_interface::srv::MoveTo>(
+                "move_to",
+                std::bind(&MyRosNode::move_to_callback, this, std::placeholders::_1, std::placeholders::_2));
+            RCLCPP_INFO(this->get_logger(), "MoveTo service is ready.");
+        }
+        ~MyRosNode()
+        {
+            RCLCPP_INFO(this->get_logger(), "MyRosNode is shutting down.");
+        }
+
+        void trigger_callback(
+            const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+            std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+        {
+            (void)request; // Unused parameter
+            RCLCPP_INFO(this->get_logger(), "Trigger service called.");
+
+            auto current_pose = moveit_node_->get_current_pose();
+            RCLCPP_INFO(this->get_logger(), "Current Pose: x=%f, y=%f, z=%f",
+                        current_pose.pose.position.x,
+                        current_pose.pose.position.y,
+                        current_pose.pose.position.z);
+            response->success = true;
+            response->message = "Trigger service executed successfully.";
+        }
+
+        void move_to_callback(
+            const std::shared_ptr<pick_place_interface::srv::MoveTo::Request> request,
+            std::shared_ptr<pick_place_interface::srv::MoveTo::Response> response)
+        {
+            RCLCPP_INFO(this->get_logger(), "MoveTo service called.");
+
+            auto current_pose = moveit_node_->get_current_pose();
+
+            request->target_pose.position.x += current_pose.pose.position.x;
+            request->target_pose.position.y += current_pose.pose.position.y;
+            request->target_pose.position.z += current_pose.pose.position.z;
+
+            moveit_node_->handle_move_to(request, response);
+
+            RCLCPP_INFO(this->get_logger(), "MoveTo service completed with success: %s", response->success ? "true" : "false");
+        }
+
+    private:
+        std::shared_ptr<move_group_server::MoveGroupService> moveit_node_;
+        rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr trigger_service_;
+        rclcpp::Service<pick_place_interface::srv::MoveTo>::SharedPtr service_;
+    };
+
 } // namespace move_group_server
 
 int main(int argc, char **argv)
@@ -99,9 +135,7 @@ int main(int argc, char **argv)
                                                rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true));
                                                rclcpp::executors::SingleThreadedExecutor executor;
     executor.add_node(node);
-    // std::thread([&executor]() {executor.spin();}).detach();
-
-    // executor.spin_once();
+    std::thread([&executor]() {executor.spin();}).detach();
 
     // Create a ROS logger
     auto const logger = rclcpp::get_logger("move_group_server_node");
@@ -117,7 +151,10 @@ int main(int argc, char **argv)
     RCLCPP_INFO(logger, "Pose value is wz: %f", pose.pose.orientation.z);
     RCLCPP_INFO(logger, "Pose value is w: %f", pose.pose.orientation.w);
 
-    executor.spin();
+    auto my_node = std::make_shared<move_group_server::MyRosNode>(move_group_service);
+
+    // executor.spin();
+    rclcpp::spin(my_node);
     rclcpp::shutdown();
     return 0;
 }

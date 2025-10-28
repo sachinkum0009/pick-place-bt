@@ -37,6 +37,15 @@ int main(int argc, char** argv) {
     // Register our custom move_to node
     factory.registerNodeType<MoveToService>("MoveTo", move_to_params);
 
+    BT::RosNodeParams move_to_pose_params;
+    move_to_pose_params.nh = nh;
+    move_to_pose_params.default_port_value = "/move_to_pose";
+    move_to_pose_params.wait_for_server_timeout = std::chrono::milliseconds(5000);  // 5 seconds to wait for service as the robot is moving very slowly
+    move_to_pose_params.server_timeout = std::chrono::milliseconds(50000);  // 50 seconds for service call
+
+    // Register our custom
+    factory.registerNodeType<MoveToService>("MoveToPose", move_to_pose_params);
+
     BT::RosNodeParams tag_pose_params;
     tag_pose_params.nh = nh;
     tag_pose_params.default_port_value = "/tag_pose";
