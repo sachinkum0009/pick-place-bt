@@ -16,6 +16,7 @@ namespace tag_pose_server
     public:
         TagPoseServer(std::shared_ptr<rclcpp::Node> node);
         ~TagPoseServer();
+
     private:
         std::shared_ptr<rclcpp::Node> node_;
         rclcpp::Service<TagPose>::SharedPtr service_;
@@ -26,5 +27,4 @@ namespace tag_pose_server
     };
 } // namespace tag_pose_server
 
-
-#endif  // PICK_PLACE_BT_TAG_POSE_SERVER_HPP
+#endif // PICK_PLACE_BT_TAG_POSE_SERVER_HPP
