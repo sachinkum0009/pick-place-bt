@@ -17,7 +17,16 @@ namespace move_group_server
         RCLCPP_INFO(node_->get_logger(), "End effector is %s", end_effector.c_str());
         RCLCPP_INFO(node_->get_logger(), "Planning frame is %s", planning_frame.c_str());
         service_ = node_->create_service<pick_place_interface::srv::MoveTo>("move_to_pose", std::bind(&MoveGroupService::handle_move_to, this, std::placeholders::_1, std::placeholders::_2));
+        move_to_service_ = node_->create_service<rai_interfaces::srv::ManipulatorMoveTo>("manipulator_move_to", std::bind(&MoveGroupService::handle_move_to_service, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(node_->get_logger(), "MoveGroupService initialized.");
+        gripper_client_ = node_->create_client<bcap_service_interfaces::srv::Gripper>("gripper_service");
+        while (!gripper_client_->wait_for_service(std::chrono::seconds(1))) {
+            if (!rclcpp::ok()) {
+            RCLCPP_ERROR(node->get_logger(), "client interrupted while waiting for service to appear.");
+            }
+            RCLCPP_INFO(node->get_logger(), "waiting for service to appear...");
+        }
+        RCLCPP_INFO(node_->get_logger(), "Gripper Client connected");
     }
 
     MoveGroupService::~MoveGroupService()
@@ -56,6 +65,69 @@ namespace move_group_server
         }
 
         RCLCPP_INFO(node_->get_logger(), "MoveTo request handled successfully.");
+    }
+    
+    void MoveGroupService::handle_move_to_service(const std::shared_ptr<rai_interfaces::srv::ManipulatorMoveTo::Request> request,
+                                    std::shared_ptr<rai_interfaces::srv::ManipulatorMoveTo::Response> response)
+    {
+        if (request->initial_gripper_state) {
+            auto gripper_req = std::make_shared<bcap_service_interfaces::srv::Gripper::Request>();
+            gripper_req->value = 30;
+            gripper_req->speed = 10;
+            auto result = gripper_client_->async_send_request(gripper_req);
+            // Wait for the result.
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+            // if (rclcpp::spin_until_future_complete(node_, result) ==
+            //     rclcpp::FutureReturnCode::SUCCESS)
+            // {
+            //     RCLCPP_INFO(node_->get_logger(), "Status: %s", result.get()->success ? "successj" : "failure");
+            // } else {
+            //     RCLCPP_ERROR(node_->get_logger(), "Failed to call service gripper_service");
+            // }
+        }
+        RCLCPP_INFO(node_->get_logger(), "Manipulator move to service request: x=%f, y=%f, z=%f, wx=%f, wy=%f, wz=%f, w=%f", 
+                request->target_pose.pose.position.x,
+                request->target_pose.pose.position.y,
+                request->target_pose.pose.position.z,
+                request->target_pose.pose.orientation.x,
+                request->target_pose.pose.orientation.y,
+                request->target_pose.pose.orientation.z,
+                request->target_pose.pose.orientation.w
+        );
+        move_group_->clearPoseTarget();
+        move_group_->setPoseTarget(request->target_pose);
+        moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+        bool success = (move_group_->plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+
+        if (success)
+        {
+            RCLCPP_INFO(node_->get_logger(), "Plan created successfully");
+            move_group_->execute(my_plan);
+            response->success = true;
+        }
+        else 
+        {
+            RCLCPP_ERROR(node_->get_logger(), "Failed to plan trajectory");
+            response->success = false;
+        }
+        if (request->final_gripper_state) {
+            auto gripper_req = std::make_shared<bcap_service_interfaces::srv::Gripper::Request>();
+            gripper_req->value = 10;
+            gripper_req->speed = 10;
+            auto result = gripper_client_->async_send_request(gripper_req);
+            // Wait for the result.
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+            // if (rclcpp::spin_until_future_complete(node_, result) ==
+            //     rclcpp::FutureReturnCode::SUCCESS)
+            // {
+            //     RCLCPP_INFO(node_->get_logger(), "Status: %s", result.get()->success ? "success" : "failure");
+            // } else {
+            //     RCLCPP_ERROR(node_->get_logger(), "Failed to call service gripper_service");
+            // }
+        }
+
+        RCLCPP_INFO(node_->get_logger(), "MoveTo request handled successfully.");
+
     }
 
     geometry_msgs::msg::PoseStamped MoveGroupService::get_current_pose()
