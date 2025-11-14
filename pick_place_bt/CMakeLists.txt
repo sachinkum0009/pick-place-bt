@@ -22,6 +22,7 @@ find_package(bcap_service_interfaces REQUIRED)
 find_package(moveit_ros_planning REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 find_package(pick_place_interface REQUIRED)
+find_package(rai_interfaces REQUIRED)
 find_package(tf2_ros REQUIRED)
 
 set (REQUIRED_PACKAGES
@@ -34,6 +35,7 @@ set (REQUIRED_PACKAGES
   moveit_ros_planning
   moveit_ros_planning_interface
   pick_place_interface
+  rai_interfaces 
   tf2_ros
 )
 
